@@ -5,7 +5,7 @@ import h5py
 import numpy as np
 import torch
 
-from .utils.parsers import parse_image_lists_with_intrinsics
+from hloc.utils.parsers import parse_image_lists_with_intrinsics, get_imagename
 
 
 def main(descriptors, output, num_matched,
@@ -21,13 +21,20 @@ def main(descriptors, output, num_matched,
         names = list(set(names))
         db_names = [n for n in names if n.startswith(db_prefix)]
         query_names = [n for n in names if n.startswith(query_prefix)]
+        # print(query_names)
         assert len(db_names)
         assert len(query_names)
     elif db_list and query_list:
+        # db_names = [
+        #     n for n, _ in parse_image_lists_with_intrinsics(db_list)]
+        # query_names = [
+        #     n for n, _ in parse_image_lists_with_intrinsics(query_list)]
+
         db_names = [
-            n for n, _ in parse_image_lists_with_intrinsics(db_list)]
+            n for n in get_imagename(db_list)]
         query_names = [
-            n for n, _ in parse_image_lists_with_intrinsics(query_list)]
+            n for n in get_imagename(query_list)]
+        # print(query_names)
     else:
         raise ValueError('Provide either prefixes of DB and query names, '
                          'or paths to lists of DB and query images.')

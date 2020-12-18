@@ -22,7 +22,7 @@ confs = {
         'output': 'matches-superglue',
         'model': {
             'name': 'superglue',
-            'weights': 'outdoor',
+            'weights': 'indoor',
             'sinkhorn_iterations': 50,
         },
     },
@@ -86,6 +86,8 @@ def main(conf, pairs, features, export_dir, exhaustive=False):
             continue
 
         data = {}
+        # print(name0)
+        # print(name1)
         feats0, feats1 = feature_file[name0], feature_file[name1]
         for k in feats1.keys():
             data[k+'0'] = feats0[k].__array__()
@@ -122,6 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('--conf', type=str, default='superglue',
                         choices=list(confs.keys()))
     parser.add_argument('--exhaustive', action='store_true')
+    
     args = parser.parse_args()
     main(
         confs[args.conf], args.pairs, args.features, args.export_dir,

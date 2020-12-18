@@ -73,6 +73,7 @@ class ImageDataset(torch.utils.data.Dataset):
 
         self.paths = []
         for g in conf.globs:
+            # self.paths += list(Path(root).glob('**/'+g))
             self.paths += list(Path(root).glob('**/'+g))
         if len(self.paths) == 0:
             raise ValueError(f'Could not find any image in root: {root}.')
@@ -150,10 +151,14 @@ def main(conf, image_dir, export_dir, as_half=False):
                     pred[k] = pred[k].astype(np.float16)
 
         grp = feature_file.create_group(data['name'][0])
+        # print("data['name'][0]------>"+data['name'][0])
         for k, v in pred.items():
+            # print("k----->"+k)
+            
             grp.create_dataset(k, data=v)
 
         del pred
+        # break
 
     feature_file.close()
     logging.info('Finished exporting features.')

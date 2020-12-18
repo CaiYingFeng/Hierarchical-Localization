@@ -47,7 +47,7 @@ def main(model, output, num_matched):
 
     logging.info(f'Found {len(pairs)} pairs.')
     with open(output, 'w') as f:
-        f.write('\n'.join(' '.join([i, j]) for i, j in pairs))
+        f.write('\n'.join(' '.join(['db/'+i, 'db/'+j]) for i, j in pairs))
 
 
 if __name__ == "__main__":

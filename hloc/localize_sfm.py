@@ -47,6 +47,7 @@ def do_covisibility_clustering(frame_ids, all_images, points3D):
 
 def pose_from_cluster(qname, qinfo, db_ids, db_images, points3D,
                       feature_file, match_file, thresh):
+    # print(qname)
     kpq = feature_file[qname]['keypoints'].__array__()
     kp_idx_to_3D = defaultdict(list)
     kp_idx_to_3D_to_db = defaultdict(lambda: defaultdict(list))
@@ -54,12 +55,28 @@ def pose_from_cluster(qname, qinfo, db_ids, db_images, points3D,
 
     for i, db_id in enumerate(db_ids):
         db_name = db_images[db_id].name
+        
+        # print('dbimages:')
+        # print(db_images)
+        # print(db_id)
+        # print('db_name:'+db_name)
+        # print('db_id:'+str(db_id))
         points3D_ids = db_images[db_id].point3D_ids
-
+        if(len(points3D_ids)==0):
+            continue
         pair = names_to_pair(qname, db_name)
+        # print(pair)
         matches = match_file[pair]['matches0'].__array__()
         valid = np.where(matches > -1)[0]
+        # print('valid')
+        # print(valid)    
+        # print('matches[valid]')
+        # print(matches[valid])
+        # print('point3D_ids:'+str(len(points3D_ids)))
+        # print("points3D_ids[matches[valid]")
+        # print(points3D_ids[matches[valid]])     
         valid = valid[points3D_ids[matches[valid]] != -1]
+        # print(valid)
         num_matches += len(valid)
 
         for idx in valid:
@@ -96,13 +113,20 @@ def pose_from_cluster(qname, qinfo, db_ids, db_images, points3D,
 
 def main(reference_sfm, queries, retrieval, features, matches, results,
          ransac_thresh=12, covisibility_clustering=False):
+         
 
+    # print(queries)
     assert reference_sfm.exists(), reference_sfm
     assert retrieval.exists(), retrieval
     assert features.exists(), features
     assert matches.exists(), matches
+    print("*********************")
+    print(features)
+    print("*********************")
+    
 
     queries = parse_image_lists_with_intrinsics(queries)
+    
     retrieval_dict = parse_retrieval(retrieval)
 
     logging.info('Reading 3D model...')
@@ -120,10 +144,16 @@ def main(reference_sfm, queries, retrieval, features, matches, results,
         'loc': {},
     }
     logging.info('Starting localization...')
+    print('len(db_name_to_id):'+str(len(db_name_to_id)))
+    # print(db_name_to_id[0])
     for qname, qinfo in tqdm(queries):
         db_names = retrieval_dict[qname]
+        # print(db_names)
+        
         db_ids = []
         for n in db_names:
+            # n=n[3:]
+            # break
             if n not in db_name_to_id:
                 logging.warning(f'Image {n} was retrieved but not in database')
                 continue
@@ -159,6 +189,8 @@ def main(reference_sfm, queries, retrieval, features, matches, results,
                 'log_clusters': logs_clusters,
             }
         else:
+            # qname=qname[6:]
+            
             ret, mkpq, mp3d, mp3d_ids, num_matches, map_ = pose_from_cluster(
                 qname, qinfo, db_ids, db_images, points3D,
                 feature_file, match_file, thresh=ransac_thresh)

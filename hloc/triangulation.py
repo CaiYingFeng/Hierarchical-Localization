@@ -8,7 +8,7 @@ import subprocess
 import pprint
 
 from .utils.read_write_model import (
-        read_cameras_binary, read_images_binary, CAMERA_MODEL_NAMES)
+        read_cameras_binary, read_images_binary, read_cameras_text,read_images_text,CAMERA_MODEL_NAMES)
 from .utils.database import COLMAPDatabase
 from .utils.parsers import names_to_pair
 
@@ -17,8 +17,13 @@ def create_db_from_model(empty_model, database_path):
     if database_path.exists():
         logging.warning('Database already exists.')
 
-    cameras = read_cameras_binary(str(empty_model / 'cameras.bin'))
-    images = read_images_binary(str(empty_model / 'images.bin'))
+    # cameras = read_cameras_binary(str(empty_model / 'cameras.bin'))
+    # images = read_images_binary(str(empty_model / 'images.bin'))
+    
+    cameras = read_cameras_text(str(empty_model / 'cameras.txt'))
+    images = read_images_text(str(empty_model / 'images.txt'))
+
+
 
     db = COLMAPDatabase.connect(database_path)
     db.create_tables()
@@ -30,7 +35,11 @@ def create_db_from_model(empty_model, database_path):
             prior_focal_length=True)
 
     for i, image in images.items():
+        # print(image.name)
+        
         db.add_image(image.name, image.camera_id, image_id=i)
+    # print("****************111111111111")
+    # print(len(images))
 
     db.commit()
     db.close()
@@ -58,12 +67,17 @@ def import_matches(image_ids, database_path, pairs_path, matches_path,
 
     with open(str(pairs_path), 'r') as f:
         pairs = [p.split(' ') for p in f.read().split('\n')]
+    
+    del(pairs[-1])#删掉最后一个，不知道为什么会多一个
 
     hfile = h5py.File(str(matches_path), 'r')
     db = COLMAPDatabase.connect(database_path)
 
     matched = set()
+
     for name0, name1 in tqdm(pairs):
+        # print(name0)
+        # print(name1)
         id0, id1 = image_ids[name0], image_ids[name1]
         if len({(id0, id1), (id1, id0)} & matched) > 0:
             continue
@@ -88,6 +102,8 @@ def import_matches(image_ids, database_path, pairs_path, matches_path,
 
         if skip_geometric_verification:
             db.add_two_view_geometry(id0, id1, matches)
+
+    
 
     hfile.close()
     db.commit()
@@ -118,10 +134,13 @@ def run_triangulation(colmap_path, model_path, database_path, image_dir,
         '--image_path', str(image_dir),
         '--input_path', str(empty_model),
         '--output_path', str(model_path),
-        '--Mapper.ba_refine_focal_length', '0',
-        '--Mapper.ba_refine_principal_point', '0',
-        '--Mapper.ba_refine_extra_params', '0']
+        # '--Mapper.ba_refine_focal_length', '0',
+        # '--Mapper.ba_refine_principal_point', '0',
+        # '--Mapper.ba_refine_extra_params', '0'
+        ]
+        
     logging.info(' '.join(cmd))
+    
     ret = subprocess.call(cmd)
     if ret != 0:
         logging.warning('Problem with point_triangulator, exiting.')
@@ -163,11 +182,14 @@ def main(sfm_dir, empty_sfm_model, image_dir, pairs, features, matches,
     model.mkdir(exist_ok=True)
 
     image_ids = create_db_from_model(empty_sfm_model, database)
+    print("***************")
+    # print(image_ids)
     import_features(image_ids, database, features)
     import_matches(image_ids, database, pairs, matches,
                    min_match_score=None, skip_geometric_verification=False)
     if not skip_geometric_verification:
         geometric_verification(colmap_path, database, pairs)
+    print("-----------------------***********")
     stats = run_triangulation(
         colmap_path, model, database, image_dir, empty_sfm_model)
     logging.info(f'Statistics:\n{pprint.pformat(stats)}')

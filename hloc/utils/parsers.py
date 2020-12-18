@@ -7,6 +7,7 @@ from collections import defaultdict
 def parse_image_lists_with_intrinsics(paths):
     results = []
     files = list(Path(paths.parent).glob(paths.name))
+    print(files)
     assert len(files) > 0
 
     for lfile in files:
@@ -24,6 +25,25 @@ def parse_image_lists_with_intrinsics(paths):
     assert len(results) > 0
     return results
 
+def get_imagename(paths):
+    results = []
+    files = list(Path(paths.parent).glob(paths.name))
+    print(files)
+    assert len(files) > 0
+
+    for lfile in files:
+        with open(lfile, 'r') as f:
+            raw_data = f.readlines()
+
+        logging.info(f'Importing {len(raw_data)} queries in {lfile.name}')
+        for data in raw_data:
+            data = data.strip('\n').split(' ')
+            name= data[0]
+            
+            results.append(name)
+
+    assert len(results) > 0
+    return results
 
 def parse_retrieval(path):
     retrieval = defaultdict(list)

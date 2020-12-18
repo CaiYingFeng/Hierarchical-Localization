@@ -73,12 +73,12 @@ def pose_from_cluster(dataset_dir, q, retrieved, feature_file, match_file,
     num_matches = 0
 
     for i, r in enumerate(retrieved):
-        kpr = feature_file[r]['keypoints'].__array__()
+        kpr = feature_file[r]['keypoints'].__array__()#r是db里的图
         pair = names_to_pair(q, r)
         m = match_file[pair]['matches0'].__array__()
         v = (m > -1)
 
-        if skip and (np.count_nonzero(v) < skip):
+        if skip and (np.count_nonzero(v) < skip):#过滤掉match小于20的
             continue
 
         mkpq, mkpr = kpq[v], kpr[m[v]]
@@ -114,9 +114,9 @@ def pose_from_cluster(dataset_dir, q, retrieved, feature_file, match_file,
 def main(dataset_dir, retrieval, features, matches, results,
          skip_matches=None):
 
-    assert retrieval.exists(), retrieval
-    assert features.exists(), features
-    assert matches.exists(), matches
+    assert retrieval.exists(), retrieval#db-query pairs
+    assert features.exists(), features#query和db的sp特征点
+    assert matches.exists(), matches#匹配的query和db
 
     retrieval_dict = parse_retrieval(retrieval)
     queries = list(retrieval_dict.keys())
